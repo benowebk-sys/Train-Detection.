@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Detection & Equipment - Professional Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+Arabic:wght@400;700;900&display=swap');
+
+        :root {
+            --bebo-green: #22c55e;
+            --bebo-cyan: #00ffd5;
+            --accent-red: #ef4444;
+            --bebo-orange: #f97316;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto+Sans+Arabic', sans-serif;
+            background-color: #020617;
+            color: white;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(24, 24, 27, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* --- Bebo Robot: Photo Exact Match --- */
+        .bebo-wrapper {
+            width: 100%;
+            max-width: 48rem;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-end;
+            margin-bottom: -15px;
+            position: relative;
+            z-index: 40;
+        }
+
+        .bebo-robot {
+            width: 70px;
+            height: 70px;
+            background: #111827; 
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .eyes-container { display: flex; gap: 12px; align-items: center; justify-content: center; }
+        .eye { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+        
+        /* State: Ready (Image 1) - Cyan Dots */
+        .bebo-robot.ready { border-color: #00ffd566; }
+        .bebo-robot.ready .eye {
+            width: 11px;
+            height: 11px;
+            background: #00ffd5;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #00ffd5, 0 0 25px rgba(0, 255, 213, 0.3);
+        }
+
+        /* State: Success (Image 7) - Orange Arches Up */
+        .bebo-robot.success { border-color: #f9731666; }
+        .bebo-robot.success .eye {
+            width: 16px;
+            height: 10px;
+            background: #f97316;
+            border-radius: 40px 40px 0 0;
+            box-shadow: 0 0 15px #f97316;
+            margin-top: 5px;
+        }
+
+        /* State: Aggressive/Error (Image 4) - Red Slanted Sharp */
+        .bebo-robot.aggressive, .bebo-robot.error { border-color: #ef444488; }
+        .bebo-robot.aggressive .eye, .bebo-robot.error .eye {
+            width: 20px;
+            height: 7px;
+            background: #ef4444;
+            border-radius: 2px;
+            box-shadow: 0 0 18px #ef4444, 0 0 5px #fff;
+            transform: rotate(-30deg);
+        }
+        .bebo-robot.aggressive .eye:last-child, .bebo-robot.error .eye:last-child { transform: rotate(30deg); }
+
+        .bebo-bubble {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 16px;
+            border-radius: 14px;
+            border-bottom-left-radius: 2px;
+            margin-left: 15px;
+            margin-bottom: 25px;
+            max-width: 320px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #f1f5f9;
+            opacity: 0;
+            transform: scale(0.9) translateY(10px);
+            transition: all 0.3s ease;
+            direction: rtl;
+        }
+
+        .bebo-bubble.active { opacity: 1; transform: scale(1) translateY(0); }
+
+        /* UI Animations */
+        @keyframes shimmer-bar { 0% { transform: translateX(100%); } 100% { transform: translateX(-300%); } }
+        .shimmer-effect { animation: shimmer-bar 2.2s infinite linear; background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 50%, transparent 100%); }
+        .animate-text-shine { background-image: linear-gradient(90deg, #dc2626, #ffffff, #dc2626); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: text-shine 4s linear infinite; }
+        @keyframes text-shine { 0% { background-position: 100% 50%; } 100% { background-position: -100% 50%; } }
+
+        .option-btn { transition: all 0.25s ease; text-align: left; }
+        .option-btn.selected { background: rgba(220, 38, 38, 0.12); border-color: #dc2626; color: white; }
+        .option-btn.correct-visual { border-color: #22c55e; background: rgba(34, 197, 94, 0.15); color: #86efac; }
+        .option-btn.wrong-visual { border-color: #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+        #progress-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="selection:bg-red-600 selection:text-white flex flex-col min-h-screen">
+
+    <header class="relative bg-zinc-900 py-6 px-4 z-30 text-center">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-xl md:text-3xl font-black tracking-tight uppercase italic text-white">
+                Train Detection <span class="text-red-600">&</span> Equipment
+            </h1>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full h-[3px] bg-red-600 shadow-[0_2px_15px_rgba(220,38,38,0.8)]"></div>
+    </header>
+
+    <div class="w-full bg-black/40 border-b border-white/5 py-4 px-4 sticky top-0 z-20 backdrop-blur-md">
+        <div class="max-w-3xl mx-auto">
+            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-[1px]">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-red-800 via-red-500 to-red-700 relative rounded-full" style="width: 0%;">
+                    <div class="absolute inset-0 w-full h-full shimmer-effect"></div>
+                </div>
+            </div>
+            <div class="mt-1.5 text-center">
+                <span id="percentage-text" class="text-[9px] font-black text-red-500 uppercase tracking-[0.4em]">0% COMPLETE</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4 md:p-6 relative">
+        <div id="bebo-wrapper" class="bebo-wrapper">
+            <div id="bebo-robot" class="bebo-robot ready">
+                <div class="eyes-container">
+                    <div class="eye"></div>
+                    <div class="eye"></div>
+                </div>
+            </div>
+            <div id="bebo-bubble" class="bebo-bubble"></div>
+        </div>
+
+        <div id="quiz-ui" class="w-full max-w-3xl z-10">
+            <div class="mb-6 flex flex-col items-center">
+                <button onclick="toggleHint()" class="flex items-center gap-2 px-6 py-2 bg-zinc-900 border border-white/10 rounded-lg text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all">
+                    <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>
+                    <span>Hint</span>
+                </button>
+                <div id="hint-box" class="hidden w-full max-w-xl mt-3 text-right">
+                    <div class="bg-zinc-900 border-l-4 border-amber-500 p-3.5 rounded-lg text-slate-300 text-xs italic shadow-lg">
+                        <span id="hint-text"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6 md:p-10 shadow-xl relative">
+                <div class="mb-8">
+                    <p class="text-red-600 font-black text-[9px] uppercase tracking-[0.4em] mb-4 border-l-2 border-red-600 pl-3 text-left text-white">QUESTION <span id="q-idx-display">1</span></p>
+                    <h2 id="question-text" class="text-lg md:text-2xl font-bold leading-snug text-left text-white"></h2>
+                </div>
+                <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10 text-white"></div>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/5">
+                    <button id="back-btn" onclick="handleBack()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-black text-[10px] tracking-widest transition-all disabled:opacity-10 text-white">
+                        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> BACK
+                    </button>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button onclick="handleSkip()" class="flex-1 sm:flex-none px-6 py-3 font-black text-slate-500 hover:text-white text-[10px] uppercase tracking-widest">
+                            SKIP
+                        </button>
+                        <button id="next-btn" onclick="handleNext()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 bg-white text-black hover:bg-red-600 hover:text-white rounded-lg font-black text-[11px] uppercase tracking-widest shadow-lg disabled:opacity-20">
+                            <span>NEXT</span> <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-view" class="hidden w-full max-w-2xl z-10">
+            <div class="bg-zinc-900 border border-white/10 p-10 rounded-2xl shadow-xl text-center relative overflow-hidden">
+                <div id="result-accent" class="absolute top-0 left-0 w-full h-[2px] shadow-[0_0_10px_rgba(34,197,94,1)]"></div>
+                
+                <h2 id="final-bebo-title" class="text-xl md:text-2xl font-black mb-8 text-white tracking-tight leading-relaxed" style="direction: rtl;"></h2>
+
+                <div class="grid grid-cols-2 gap-4 mb-8 max-w-sm mx-auto mt-6">
+                    <div class="bg-black/40 p-4 rounded-lg">
+                        <p class="text-[8px] text-slate-500 font-bold uppercase mb-1">Score</p>
+                        <p id="final-raw-score" class="text-2xl font-black text-white"></p>
+                    </div>
+                    <div class="bg-black/40 p-4 rounded-lg">
+                        <p class="text-[8px] text-slate-500 font-bold uppercase mb-1">Accuracy</p>
+                        <p id="final-pct" class="text-2xl font-black text-red-500"></p>
+                    </div>
+                </div>
+                <button id="restart-btn" onclick="location.reload()" class="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-lg transition-all uppercase tracking-widest shadow-lg">Restart Session</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-black py-12 px-4 border-t border-white/5 mt-auto text-center">
+        <div class="max-w-7xl mx-auto">
+            <p class="text-lg md:text-2xl font-bold tracking-tighter uppercase italic text-white/30">
+                Developer by <span class="animate-text-shine font-black text-white">Bilal Mohamed</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        const questionData = [
+            { id: 1, type: "TF", question: "Track circuits operate on a fail-safe principle.", options: ["True", "False"], correct: 0, hint: "Fail-safe means if it fails, it defaults to the safest state (Danger)." },
+            { id: 2, type: "TF", question: "Axle counters depend on electrical continuity of rails.", options: ["True", "False"], correct: 1, hint: "Axle counters count wheels; they don't need rail continuity like track circuits." },
+            { id: 3, type: "TF", question: "Broken rails cause a track circuit signal to turn red.", options: ["True", "False"], correct: 0, hint: "A break in the rail interrupts the electrical path." },
+            { id: 4, type: "TF", question: "Axle counters automatically clear after a miscount.", options: ["True", "False"], correct: 1, hint: "A miscount usually requires a manual reset for safety reasons." },
+            { id: 5, type: "TF", question: "Wet ballast can cause false occupancy in track circuits.", options: ["True", "False"], correct: 0, hint: "Moisture reduces the resistance between the rails." },
+            { id: 6, type: "TF", question: "Sensor gapping is a critical parameter in axle counters.", options: ["True", "False"], correct: 0, hint: "The distance between the wheel and the sensor must be precise." },
+            { id: 7, type: "TF", question: "Track circuits are unaffected by rust on rails.", options: ["True", "False"], correct: 1, hint: "Rust is an insulator and can prevent the wheels from shunting the circuit." },
+            { id: 8, type: "TF", question: "Preventive maintenance reduces unexpected failures.", options: ["True", "False"], correct: 0, hint: "Fixing things before they break is the goal of preventive care." },
+            { id: 9, type: "TF", question: "EMI can affect axle counter performance.", options: ["True", "False"], correct: 0, hint: "Electromagnetic Interference can disrupt the sensors." },
+            { id: 10, type: "TF", question: "Corrective maintenance is performed before a fault occurs.", options: ["True", "False"], correct: 1, hint: "Corrective happens AFTER a fault; preventive happens BEFORE." },
+            { id: 11, type: "TF", question: "Train detection monitoring is essential for railway safety.", options: ["True", "False"], correct: 0, hint: "Knowing where the train is at all times is the foundation of safety." },
+            { id: 12, type: "TF", question: "In an unoccupied track circuit, the relay is energized.", options: ["True", "False"], correct: 0, hint: "When no train is present, current flows to the relay." },
+            { id: 13, type: "TF", question: "Advanced analytics help predict track circuit failures early.", options: ["True", "False"], correct: 0, hint: "Predictive data can spot degradation trends." },
+            { id: 14, type: "TF", question: "Zentrak monitoring increases the frequency of routine inspections.", options: ["True", "False"], correct: 1, hint: "Remote monitoring actually aims to optimize and reduce physical inspection needs." },
+            { id: 15, type: "TF", question: "Hall Effect sensors are used in AC track circuits.", options: ["True", "False"], correct: 1, hint: "Hall Effect sensors are typically used in axle counters or current measurement." },
+            { id: 16, type: "TF", question: "DC traction current can interfere with AC track circuit measurements.", options: ["True", "False"], correct: 1, hint: "AC circuits are often chosen because they are less affected by DC traction." },
+            { id: 17, type: "TF", question: "Audio frequency track circuits use diagnostic outputs for monitoring.", options: ["True", "False"], correct: 0, hint: "Digital data outputs are standard for modern AF track circuits." },
+            { id: 18, type: "TF", question: "One logger can communicate with multiple receivers.", options: ["True", "False"], correct: 0, hint: "Centralized logging often gathers data from multiple points." },
+            { id: 19, type: "TF", question: "Insulated rail joint contamination can affect track circuit performance.", options: ["True", "False"], correct: 0, hint: "Dirt or metal filings can bridge the joint." },
+            { id: 20, type: "TF", question: "Train detection systems do not require maintenance.", options: ["True", "False"], correct: 1, hint: "Safety systems require high levels of rigorous maintenance." },
+            { id: 21, type: "TF", question: "Mechanical signaling systems use physical rods and wires to operate signals.", options: ["True", "False"], correct: 0, hint: "Think of the old levers in a signal box." },
+            { id: 22, type: "TF", question: "The home signal is the main stop signal in railway signaling.", options: ["True", "False"], correct: 0, hint: "It controls the entry to the station/block." },
+            { id: 23, type: "TF", question: "Distant signals require trains to stop when they show danger.", options: ["True", "False"], correct: 1, hint: "Distant signals warn of the next signal; they don't command a stop themselves." },
+            { id: 24, type: "TF", question: "Junction signals are used when tracks divide into different routes.", options: ["True", "False"], correct: 0, hint: "They indicate which path the train will take." },
+            { id: 25, type: "TF", question: "Disc signals are mainly used for high-speed train operations.", options: ["True", "False"], correct: 1, hint: "Disc signals are usually for slow shunting movements." },
+            { id: 26, type: "TF", question: "Mechanical signaling systems depend heavily on electrical power.", options: ["True", "False"], correct: 1, hint: "They are primarily mechanical, which is why they work during power cuts." },
+            { id: 27, type: "TF", question: "Mechanical signaling systems are suitable for lines with low train traffic.", options: ["True", "False"], correct: 0, hint: "They are simple and cost-effective for quiet lines." },
+            { id: 28, type: "TF", question: "One disadvantage of mechanical signaling is the high risk of human error.", options: ["True", "False"], correct: 0, hint: "Operating levers manually depends on the signalman's attention." },
+            { id: 29, type: "TF", question: "Mechanical signaling systems are easy to integrate with modern digital control systems.", options: ["True", "False"], correct: 1, hint: "Converting iron rods to digital data is complex and costly." },
+            { id: 30, type: "TF", question: "Environmental conditions can affect the reliability of mechanical signaling systems.", options: ["True", "False"], correct: 0, hint: "Heat expansion or frost can affect long wire runs." },
+            { id: 31, type: "MCQ", question: "Track circuits detect train presence by:", options: ["Optical sensors", "Hydraulic pressure", "Electrical continuity through rails", "GPS positioning"], correct: 2, hint: "The wheelset creates a path between the two rails." },
+            { id: 32, type: "MCQ", question: "The main purpose of impedance bonds is to:", options: ["Increase ballast resistance", "Detect wheel flanges", "Isolate traction current from signaling current", "Count train axles"], correct: 2, hint: "They allow traction current to return while keeping signal current in its section." },
+            { id: 33, type: "MCQ", question: "In a track circuit, when a train enters the section, the relay becomes:", options: ["Overloaded", "Energized", "Picked up", "De-energized"], correct: 3, hint: "The current is shunted away from the relay." },
+            { id: 34, type: "MCQ", question: "Axle counters determine occupancy when:", options: ["Voltage drops below a limit", "Axles are detected magnetically", "Rails are electrically shunted", "Signals are manually set"], correct: 1, hint: "Sensors detect the metal of the wheel as it passes." },
+            { id: 35, type: "MCQ", question: "A mismatch between in-count and out-count results in:", options: ["Clear track", "Green signal", "Occupied section", "Automatic reset"], correct: 2, hint: "If 10 axles enter but only 9 leave, the track is still occupied." },
+            { id: 36, type: "MCQ", question: "Which condition causes false occupancy in track circuits?", options: ["High shunt resistance", "Wet ballast", "Sensor misalignment", "Power surge"], correct: 1, hint: "Water conducts current across the rails, simulating a train." },
+            { id: 37, type: "MCQ", question: "Axle counters are especially suitable for:", options: ["Short insulated sections only", "Dry ballast areas", "Tunnels and long track sections", "Manual signal systems"], correct: 2, hint: "They don't suffer from ballast leakage over long distances." },
+            { id: 38, type: "MCQ", question: "Sensor misalignment in axle counters leads to:", options: ["Increased accuracy", "False clear", "Missed counts", "Reduced EMI"], correct: 2, hint: "If the sensor isn't positioned right, it won't see the wheels." },
+            { id: 39, type: "MCQ", question: "In both detection systems, a fault results in:", options: ["Green signal", "Yellow signal", "Signal off", "Red signal"], correct: 3, hint: "Safety systems fail to the most restrictive state." },
+            { id: 40, type: "MCQ", question: "Which maintenance action includes software updates?", options: ["Routine maintenance", "Corrective maintenance", "Preventive maintenance", "Emergency operation"], correct: 2, hint: "Updates keep the system running optimally and prevent future bugs." },
+            { id: 41, type: "MCQ", question: "What is the primary purpose of train detection systems?", options: ["Improve passenger comfort", "Detect track occupancy", "Reduce fuel consumption", "Control ticketing systems"], correct: 1, hint: "Knowing if a track is clear or full." },
+            { id: 42, type: "MCQ", question: "A track circuit is considered occupied when:", options: ["The relay is energized", "Current flows freely through the rails", "Train wheels short-circuit the rails", "The signal lamp turns green"], correct: 2, hint: "The wheelset creates a 'short' circuit." },
+            { id: 43, type: "MCQ", question: "Which issue can be detected using advanced analytics?", options: ["Wheel wear", "Rail joint contamination", "Passenger overload", "Track alignment"], correct: 1, hint: "Electronic footprints of joints change over time." },
+            { id: 44, type: "MCQ", question: "One benefit of Zentrak monitoring is:", options: ["Increased manual inspection", "Reduced life-cycle cost", "Higher energy consumption", "Manual fault reporting"], correct: 1, hint: "Monitoring saves money over the lifespan of the equipment." },
+            { id: 45, type: "MCQ", question: "AC track circuits commonly use which relay type?", options: ["Thermal relay", "Solid-state relay", "Phase-sensitive vane relay", "Hydraulic relay"], correct: 2, hint: "The Vane relay is the classic choice for AC detection." },
+            { id: 46, type: "MCQ", question: "Which sensor is used to monitor DC track circuits?", options: ["Optical sensor", "Temperature sensor", "Hall Effect sensor", "Pressure sensor"], correct: 2, hint: "Hall Effect sensors measure magnetic fields from DC current." },
+            { id: 47, type: "MCQ", question: "Audio frequency track circuits are mainly associated with:", options: ["Mechanical signaling", "Manual block systems", "Microprocessor-controlled equipment", "Pneumatic systems"], correct: 2, hint: "Modern AF circuits are digital and computer-based." },
+            { id: 48, type: "MCQ", question: "Which parameter is recorded in audio frequency monitoring?", options: ["Train speed", "Sideband current", "Axle load", "Rail temperature"], correct: 1, hint: "Frequency signals have sidebands that contain data." },
+            { id: 49, type: "MCQ", question: "Zentrak TDM can provide monitoring:", options: ["Only during daytime", "Only during maintenance", "24 hours a day", "Only when faults occur"], correct: 2, hint: "Remote monitoring is always active." },
+            { id: 50, type: "MCQ", question: "Track circuit monitoring data is mainly processed by:", options: ["Signal lamps", "Mechanical relays", "Loggers and analytics software", "Train drivers"], correct: 2, hint: "Computers analyze the logs to find faults." },
+            { id: 51, type: "MCQ", question: "Mechanical rail signaling mainly operates using:", options: ["Electronic circuits", "Hydraulic systems", "Physical levers and rods", "Wireless signals"], correct: 2, hint: "Mechanical force transmits the signal." },
+            { id: 52, type: "MCQ", question: "Which signal is considered the primary stop signal?", options: ["Distant Signal", "Home Signal", "Disc Signal", "Junction Signal"], correct: 1, hint: "The Home signal protects the main entrance to a station." },
+            { id: 53, type: "MCQ", question: "Which signal warns the driver about the status of the next signal?", options: ["Home Signal", "Junction Signal", "Distant Signal", "Calling-on Signal"], correct: 2, hint: "It provides a 'distant' view of what's ahead." },
+            { id: 54, type: "MCQ", question: "Junction signals are used when:", options: ["Trains enter stations", "Tracks split into different directions", "Trains leave yards", "Trains change speed"], correct: 1, hint: "They help route the train onto different tracks." },
+            { id: 55, type: "MCQ", question: "Permissive signals allow a train to:", options: ["Stop immediately", "Enter an occupied track slowly", "Increase speed", "Reverse direction"], correct: 1, hint: "It 'permits' entry under caution." },
+            { id: 56, type: "MCQ", question: "Disc shunting signals are mainly used for:", options: ["High-speed operations", "Passenger stations", "Shunting movements in yards", "Long-distance travel"], correct: 2, hint: "Used for switching tracks in yards." },
+            { id: 57, type: "MCQ", question: "Which component is used to manually operate mechanical signals?", options: ["Transformer", "Lever", "Battery", "Relay"], correct: 1, hint: "The signalman pulls this in the box." },
+            { id: 58, type: "MCQ", question: "One advantage of mechanical signaling systems is:", options: ["High automation", "Low installation cost", "Wireless communication", "Computer control"], correct: 1, hint: "No complex electronics makes initial setup cheaper." },
+            { id: 59, type: "MCQ", question: "Mechanical signaling systems are most suitable for:", options: ["High-speed railways", "Busy urban railways", "Low traffic railway lines", "Metro systems"], correct: 2, hint: "They can't handle the high frequency of metros." },
+            { id: 60, type: "MCQ", question: "A major limitation of mechanical signaling systems is:", options: ["Too much automation", "Dependence on electricity", "Limited operational range", "Digital complexity"], correct: 2, hint: "Rods and wires can only be so long before friction is too much." }
+        ];
+
+        const beboMessages = {
+            intro: ["نجم النجوم حمدلله على السلامه يعم .", "مرحبا اسمي بيبو جاهز لبدا الاختبار ؟.", "يا هلا يا هلا ", "خش كده ورينا هتعمل ايه .", "اهلا بالبطل اللى جاى يقلب الدنيا .", "جاهز يا للاختبار ."],
+            correct: ["شخصين بحبهم انت والمصمم عاش عليك بجد يسطا .", "الدكتور مبسوطه منك هايل والله .", "لسانى يعجز عن الكلام والله بس حقيقى برافو .", "يسلام عيك عليك انت كده تلعب على الامتياز يانجم .", "هايل يباشا الله عليك عاش .", "ايوا كده عاوزك تفرتك الورقه فى الامتحان .", "يسلام عليك وانت ملعلع كده ايوا ستمر عاش .", "كده انت بتفهم مش بتهزر .", "اجابة تحترم بصراحة كمل على كده .", "واضح انك داخل تقفل مش تلعب .", "كده انت ماشى صح متغلطش بقى ."],
+            aggressive: ["عارف الحيا هتحلو امتى لما تتنيل تذاكر .", "ركز يا مسطول .", "جلنف جلنف يعنى مفيش كلام.", "الموكوس وخايب الرجا لما يقعدو مع بعض .", "حسب خبرتى كده انت تلعب بالعجله درجن درجن الامتياز ده مش سكتك صدقنى.", "انت بتهزر يبنى اى ده انت كده مش هتحصل تجيب درجه حراره حتى.", "ادائك ده يدرس حقيقى اى الضحك ده يسطا.", "انت بتنام يسطا ولا متفوق يعم انت بتغرق كده.", "تعرف لو جابو ليا كنوز الدنيا علشان ابيعك هبيعك اى الى انت بتعملو ده.", "تقريبا الفص الى فى مخك المسؤل عن اتخاذ القرارات فص ثوم.", "انت كده داخل تضيع وقت مش اكتر .", "انا مش فاهم انت بتفكر ازاى اصلا .", "كده انت محتاج اعادة ضبط مصنع .", "لو ده مستواك يبقى فى مشكلة كبيرة ."],
+            fast: ["خد نفسك واقرا السؤال الاول.", "هو حد بيجرى وراك ولا اى.", "مستعجل على يا اخويا اقرا السؤال الاول.", "اقرا السؤال الاول يا جلنف.", "اهدى كده مفيش سباق هنا .", "على مهلك شوية بدل الهبد ده ."],
+            resultsAdvice: ["هيجى شخص يحسسك انك ف كفه والكون كله فى كفه وبعدين يسقفلك بالكفتين على وشك علشان النتيجه العره الى انت جايبها دى.", "متزعلش مش مهم درجتك فى الامتحان المهم الصحه والستر.", "تعي اشب شاى يسطا بالى انت عامله ده.", "منت لو تبص على التلميحات وانت بتحل مكنتش جبت درجات الحراره دى.", "نتيجتك دى يسطا ولا درجه حراره.", "بص النتيجه دى محتاجه شغل تقيل مش هزار .", "انت لازم تراجع من الاول خالص .", "لو كملت كده مش هتوصل لحاجه .", "شد حيلك بدل ما تفضل فى نفس المكان ."],
+            resultsSuccess: ["اوعي تتغر بالنتيجه دى يا صحبي .", "المعيد القادم .", "مش قولتلك دحيح جامد يعم اتكل على الله يلا من هنا.", "نتيجه محترمه بس لسه قدامك احسن .", "كده انت فى السليم كمل بس .", "واضح انك تعبت وده باين فى نتيجتك ."]
+        };
+
+        let currentIdx = 0;
+        let mistakes = 0;
+        let answers = {};
+        let lastActionTime = Date.now();
+
+        function setBebo(state, category, isFinal = false) {
+            const robot = document.getElementById('bebo-robot');
+            const bubble = document.getElementById('bebo-bubble');
+            const msgs = beboMessages[category];
+            const chosenMsg = msgs[Math.floor(Math.random() * msgs.length)];
+            
+            robot.className = `bebo-robot ${state}`;
+
+            if (isFinal) {
+                bubble.classList.remove('active');
+                document.getElementById('final-bebo-title').innerText = chosenMsg;
+                const accent = document.getElementById('result-accent');
+                if (state === 'success') {
+                    accent.className = "absolute top-0 left-0 w-full h-[2px] bg-green-500 shadow-[0_0_10px_rgba(34,197,94,1)]";
+                } else {
+                    accent.className = "absolute top-0 left-0 w-full h-[2px] bg-red-600 shadow-[0_0_10px_rgba(220,38,38,1)]";
+                }
+            } else {
+                bubble.innerText = chosenMsg;
+                bubble.classList.add('active');
+                // Removed the setTimeout so state stays until NEXT is pressed
+            }
+        }
+
+        function resetBebo() {
+            const robot = document.getElementById('bebo-robot');
+            const bubble = document.getElementById('bebo-bubble');
+            robot.className = "bebo-robot ready";
+            bubble.classList.remove('active');
+        }
+
+        function updateProgress() {
+            const correctCount = Object.keys(answers).filter(k => answers[k] === questionData[k].correct).length;
+            const progress = Math.round((correctCount / questionData.length) * 100);
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('percentage-text').innerText = `${progress}% COMPLETE`;
+        }
+
+        function render() {
+            const data = questionData[currentIdx];
+            document.getElementById('q-idx-display').innerText = currentIdx + 1;
+            document.getElementById('question-text').innerText = data.question;
+            document.getElementById('hint-text').innerText = data.hint;
+            document.getElementById('hint-box').classList.add('hidden');
+            
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            
+            data.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                let visualClass = '';
+                if (answers[currentIdx] !== undefined) {
+                    if (i === data.correct) visualClass = 'correct-visual';
+                    else if (answers[currentIdx] === i) visualClass = 'wrong-visual';
+                }
+                btn.className = `option-btn flex items-center justify-between p-4 rounded-lg border border-white/5 bg-black/30 text-slate-400 font-bold ${answers[currentIdx] === i ? 'selected' : ''} ${visualClass}`;
+                btn.innerHTML = `<span>${opt}</span><div class="w-5 h-5 rounded-full border border-white/10 flex items-center justify-center">${answers[currentIdx] === i ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}</div>`;
+                btn.onclick = () => select(i);
+                grid.appendChild(btn);
+            });
+            lucide.createIcons();
+            
+            document.getElementById('back-btn').disabled = currentIdx === 0;
+            document.getElementById('next-btn').disabled = (answers[currentIdx] === undefined);
+            lastActionTime = Date.now();
+        }
+
+        function select(i) {
+            if (answers[currentIdx] !== undefined) return; // Prevent re-selecting on same question
+            
+            const elapsed = Date.now() - lastActionTime;
+            const correct = i === questionData[currentIdx].correct;
+            answers[currentIdx] = i;
+
+            if (correct) {
+                mistakes = 0;
+                if (elapsed < 2000) setBebo('aggressive', 'fast');
+                else setBebo('success', 'correct');
+            } else {
+                mistakes++;
+                setBebo('aggressive', 'aggressive');
+            }
+            updateProgress();
+            render();
+        }
+
+        function handleNext() {
+            if (currentIdx < questionData.length - 1) {
+                currentIdx++;
+                resetBebo(); // Return Bebo to ready for new question
+                render();
+            } else finish();
+        }
+
+        function handleBack() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                resetBebo();
+                render();
+            }
+        }
+
+        function handleSkip() { handleNext(); }
+        function toggleHint() { document.getElementById('hint-box').classList.toggle('hidden'); }
+
+        function finish() {
+            document.getElementById('quiz-ui').classList.add('hidden');
+            document.getElementById('bebo-wrapper').classList.add('hidden');
+            document.getElementById('result-view').classList.remove('hidden');
+            
+            const correctCount = Object.keys(answers).filter(k => answers[k] === questionData[k].correct).length;
+            const pct = Math.round((correctCount / questionData.length) * 100);
+            document.getElementById('final-pct').innerText = pct + '%';
+            document.getElementById('final-raw-score').innerText = `${correctCount} / ${questionData.length}`;
+            
+            if (pct >= 80) {
+                setBebo('success', 'resultsSuccess', true);
+            } else {
+                setBebo('aggressive', 'resultsAdvice', true);
+            }
+        }
+
+        window.onload = () => {
+            render();
+            lucide.createIcons();
+            setBebo('ready', 'intro');
+        };
+    </script>
+</body>
+</html>
