@@ -3,566 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Train Detection & Equipment - Professional Assessment</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Train Detection Quiz</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+Arabic:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Rajdhani:wght@400;700;900&display=swap');
-
-        :root {
-            --bebo-green: #22c55e;
-            --bebo-cyan: #00ffd5;
-            --accent-red: #ef4444;
-            --bebo-orange: #f97316;
-            --bebo-purple: #a855f7;
-            --glass-blur: blur(15px);
-            --border-subtle: rgba(255,255,255,0.12);
-            --bg-card: rgba(15, 23, 42, 0.75);
-            --bg-surface: rgba(15, 23, 42, 0.55);
-            --text-dim: #cbd5e1;
-            --transition: all 0.4s ease;
-        }
-
-        body {
-            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-            background-color: #020617;
-            color: white;
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        .glass-card {
-            background: rgba(24, 24, 27, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        /* --- Bebo Section --- */
-        .bebo-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 1rem;
-            position: relative;
-        }
-
-        @media (min-width: 768px) { .bebo-wrapper { align-items: flex-end; } }
-
-        .bebo-bubble {
-            background: rgba(25, 32, 48, 0.96);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border-subtle);
-            padding: 10px 16px;
-            border-radius: 14px;
-            font-size: 0.9rem;
-            color: #fff;
-            margin-bottom: 8px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-            max-width: 320px;
-            transition: all 0.4s ease;
-            opacity: 0;
-            transform: translateY(8px);
-            font-family: 'Tajawal', sans-serif;
-            text-align: right;
-            direction: rtl;
-            pointer-events: none;
-        }
-
-        .bebo-bubble.active { opacity: 1; transform: translateY(0); }
-
-        .bebo-robot {
-            width: 54px;
-            height: 54px;
-            background: linear-gradient(145deg, #2a3445, #0d121a);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .eyes-container { display: flex; gap: 8px; }
-        .eye { width: 8px; height: 8px; background: var(--bebo-purple); border-radius: 50%; box-shadow: 0 0 8px var(--bebo-purple); transition: var(--transition); }
-        .bebo-robot.success .eye { background: var(--bebo-green); height: 4px; border-radius: 4px 4px 0 0; box-shadow: 0 0 10px var(--bebo-green); }
-        .bebo-robot.error .eye { background: var(--accent-red); height: 3px; border-radius: 2px; transform: rotate(-15deg); box-shadow: 0 0 10px var(--accent-red); }
-
-        /* --- Quiz Body Styles --- */
-        .q-ar-box {
-            background: rgba(255, 62, 62, 0.03);
-            border: 1px solid rgba(255, 62, 62, 0.08);
-            border-left: 3px solid var(--accent-red);
-            padding: 0.8rem 1rem;
-            border-radius: 4px 12px 12px 4px;
-            font-family: 'Tajawal', sans-serif;
-            font-size: 0.95rem;
-            color: var(--text-dim);
-            direction: rtl;
-            text-align: right;
-            margin-top: 12px;
-        }
-
-        .q-en-main {
-            font-size: 1.15rem;
-            font-weight: 600;
-            line-height: 1.4;
-            color: #fff;
-        }
-
-        .options-grid {
-            display: grid;
-            gap: 12px;
-            margin-bottom: 1.5rem;
-        }
-
-        .option-btn {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-dim);
-            padding: 0.85rem 1rem;
-            text-align: left;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .option-btn .char-idx {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--accent-red);
-            width: 28px; height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            font-weight: 700;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.9rem;
-        }
-
-        .option-btn:hover:not(:disabled) {
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #fff;
-            transform: translateX(6px);
-        }
-
-        .option-btn.correct { background: rgba(34, 197, 94, 0.15) !important; border-color: var(--bebo-green) !important; color: #fff !important; }
-        .option-btn.wrong { background: rgba(255, 62, 62, 0.15) !important; border-color: var(--accent-red) !important; color: #fff !important; }
-
-        .hint-display {
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.5s ease;
-        }
-
-        .hint-display.active {
-            max-height: 300px;
-            margin-bottom: 1.5rem;
-        }
-
-        footer {
-            background: rgba(2, 2, 4, 0.98);
-            padding: 2rem 1rem;
-            text-align: center;
-            color: #aaa;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            border-top: 1px solid #111;
-            font-family: 'Rajdhani', sans-serif;
-        }
-
-        .hidden { display: none !important; }
-
-        @media (max-width: 640px) {
-            .options-grid.two-cols { grid-template-columns: 1fr; }
-            .q-en-main { font-size: 1rem; }
-            .bebo-bubble { max-width: 260px; font-size: 0.8rem; }
-        }
-
-        @keyframes shimmer-bar { 0% { transform: translateX(100%); } 100% { transform: translateX(-300%); } }
-        .shimmer-effect { animation: shimmer-bar 2.2s infinite linear; background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%); }
-        
-        .animate-text-shine {
-            background: linear-gradient(90deg, #dc2626, #ffffff, #dc2626);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            animation: text-shine 3s linear infinite;
-        }
-        @keyframes text-shine { to { background-position: 200% center; } }
-        
-        #progress-bar { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-    </style>
 </head>
-<body class="selection:bg-red-600 selection:text-white flex flex-col min-h-screen">
+<body>
+    <div class="page-shell">
+        <div class="page-bg"></div>
 
-    <header class="relative bg-zinc-900 py-6 px-4 z-30 text-center">
-        <div class="max-w-7xl mx-auto">
-            <h1 class="text-xl md:text-3xl font-black tracking-tight uppercase italic text-white">
-                Train Detection <span class="text-red-600">&</span> Equipment
-            </h1>
-        </div>
-        <div class="absolute bottom-0 left-0 w-full h-[3px] bg-red-600 shadow-[0_2px_15px_rgba(220,38,38,0.8)]"></div>
-    </header>
+        <header class="app-header">
+            <h1>Train Detection</h1>
+        </header>
 
-    <div class="w-full bg-black/40 border-b border-white/5 py-4 px-4 sticky top-0 z-20 backdrop-blur-md">
-        <div class="max-w-3xl mx-auto">
-            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-[1px]">
-                <div id="progress-bar" class="h-full bg-gradient-to-r from-red-800 via-red-500 to-red-700 relative rounded-full" style="width: 0%;">
-                    <div class="absolute inset-0 w-full h-full shimmer-effect"></div>
+        <main class="quiz-shell">
+            <section class="quiz-frame glass-card">
+                <div class="bebo-wrapper">
+                    <div id="bebo-bubble" class="bebo-bubble">مرحبا اسمي بيبو</div>
+                    <div id="bebo-robot" class="bebo-robot">
+                        <div class="eyes-container">
+                            <div class="eye"></div>
+                            <div class="eye"></div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="mt-2 text-center">
-                <span id="percentage-text" class="text-[10px] font-black text-red-500 uppercase tracking-[0.4em]">0% COMPLETE</span>
-            </div>
-        </div>
+
+                <div id="quiz-ui" class="quiz-ui">
+                    <div class="question-head">
+                        <div class="question-meta">سؤال <span id="current-idx">01</span> / <span id="total-idx">50</span></div>
+                        <div id="question-text" class="question-text"></div>
+                    </div>
+
+                    <div class="actions-row">
+                        <div class="hint-group">
+                            <button type="button" class="btn btn-outline" onclick="toggleHint()">تلميح</button>
+                            <div id="hint-panel" class="hint-display">
+                                <div id="hint-text" class="hint-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="options-container" class="options-grid"></div>
+
+                    <div class="pager-row">
+                        <button id="btn-prev" type="button" class="btn btn-secondary" onclick="handleBack()">BACK</button>
+                        <button id="next-btn" type="button" class="btn btn-primary" onclick="handleNext()">NEXT</button>
+                        <button type="button" id="btn-skip" class="btn btn-text" onclick="handleSkip()">Skip</button>
+                    </div>
+                </div>
+
+                <div id="result-view" class="result-view hidden">
+                    <div class="result-card">
+                        <i data-lucide="award" class="result-icon"></i>
+                        <h2 id="final-bebo-title">Your Result</h2>
+                        <div class="result-grid">
+                            <div class="result-box">
+                                <span class="result-label">Score</span>
+                                <span id="final-raw-score" class="result-value"></span>
+                            </div>
+                            <div class="result-box">
+                                <span class="result-label">Percent</span>
+                                <span id="final-pct" class="result-value"></span>
+                            </div>
+                        </div>
+                        <p id="final-feedback" class="result-text"></p>
+                        <button class="btn btn-primary" onclick="location.reload()">Restart Session</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p class="footer-credit">By Developer Belal Mohamed</p>
+        </footer>
     </div>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4 md:p-8 relative">
-        <div id="bebo-wrapper" class="bebo-wrapper">
-            <div id="bebo-bubble" class="bebo-bubble"></div>
-            <div id="bebo-robot" class="bebo-robot">
-                <div class="eyes-container">
-                    <div class="eye"></div>
-                    <div class="eye"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="quiz-ui" class="w-full max-w-3xl z-10">
-            <div class="mb-6 flex flex-col items-center">
-                <button onclick="toggleHint()" class="flex items-center gap-2 px-6 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all">
-                    <i data-lucide="lightbulb" class="w-4 h-4 text-amber-500"></i>
-                    <span>Toggle Hint / تلميح</span>
-                </button>
-                <div id="hint-panel" class="hint-display w-full max-w-xl mt-4">
-                    <div class="bg-zinc-900/80 border-l-4 border-amber-500 p-4 rounded-lg shadow-2xl backdrop-blur-sm">
-                        <div id="hint-text"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6 md:p-10 shadow-2xl relative">
-                <div class="mb-8">
-                    <p class="text-red-600 font-black text-[10px] uppercase tracking-[0.4em] mb-4 border-l-2 border-red-600 pl-3">
-                        QUESTION <span id="current-idx">01</span> / <span id="total-idx">60</span>
-                    </p>
-                    <div id="question-text"></div>
-                </div>
-                
-                <div id="options-container" class="options-grid"></div>
-
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 mt-4">
-                    <button id="btn-prev" onclick="handleBack()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-black text-[10px] tracking-widest transition-all disabled:opacity-20 text-white">
-                        <i data-lucide="chevron-left" class="w-4 h-4"></i> BACK
-                    </button>
-                    
-                    <div class="flex items-center gap-3 w-full sm:w-auto">
-                        <button id="btn-skip" onclick="handleSkip()" class="flex-1 sm:flex-none px-6 py-3.5 font-black text-slate-500 hover:text-white text-[10px] uppercase tracking-widest">
-                            SKIP
-                        </button>
-                        <button id="next-btn" onclick="handleNext()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-10 py-3.5 bg-white text-black hover:bg-red-600 hover:text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all disabled:opacity-30">
-                            <span id="next-text">NEXT</span> <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="result-view" class="hidden w-full max-w-2xl z-10">
-            <div class="bg-zinc-900 border border-white/10 p-10 rounded-3xl shadow-2xl text-center relative overflow-hidden">
-                <div id="result-accent" class="absolute top-0 left-0 w-full h-[3px] bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)]"></div>
-                
-                <div class="mb-6">
-                    <i data-lucide="award" class="w-16 h-16 text-yellow-500 mx-auto mb-4"></i>
-                    <h2 id="final-bebo-title" class="text-2xl md:text-3xl font-black text-white tracking-tight leading-relaxed mb-2" style="direction: rtl;"></h2>
-                </div>
-
-                <div class="grid grid-cols-2 gap-6 mb-10 max-w-sm mx-auto">
-                    <div class="bg-black/40 p-6 rounded-2xl border border-white/5">
-                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-2">Score</p>
-                        <p id="final-raw-score" class="text-3xl font-black text-white"></p>
-                    </div>
-                    <div class="bg-black/40 p-6 rounded-2xl border border-white/5">
-                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-2">Accuracy</p>
-                        <p id="final-pct" class="text-3xl font-black text-red-500"></p>
-                    </div>
-                </div>
-
-                <div id="final-feedback" class="text-slate-300 text-lg mb-10 font-medium italic" style="direction: rtl;"></div>
-                
-                <button onclick="location.reload()" class="px-10 py-4 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-xl transition-all uppercase tracking-widest shadow-xl">
-                    Restart Session
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <div class="max-w-7xl mx-auto">
-            <p class="text-lg md:text-xl font-bold tracking-tighter uppercase italic text-white/30">
-                Developed by <span class="animate-text-shine font-black text-white">Bilal Mohamed</span>
-            </p>
-        </div>
-    </footer>
-
-    <script>
-        const quizData = [
-            { id: 1, type: "TF", question: "Track circuits operate on a fail-safe principle.", questionAr: "تعمل الدوائر القضبانية على مبدأ الأمان عند الفشل (Fail-safe).", options: ["True", "False"], correct: 1, hint: "Fail-safe means if it fails, it defaults to the safest state (Danger).", hintAr: "الأمان عند الفشل يعني أنه في حالة العطل، يعود النظام تلقائيًا إلى الحالة الأكثر أمانًا (وضع الخطر)." },
-            { id: 2, type: "TF", question: "Axle counters depend on electrical continuity of rails.", questionAr: "تعتمد عدادات المحاور على الاستمرارية الكهربائية للقضبان.", options: ["True", "False"], correct: 0, hint: "Axle counters count wheels; they don't need rail continuity like track circuits.", hintAr: "عدادات المحاور تقوم بعد العجلات؛ وهي لا تحتاج لاستمرارية القضبان مثل الدوائر القضبانية." },
-            { id: 3, type: "TF", question: "Broken rails cause a track circuit signal to turn red.", questionAr: "تؤدي القضبان المكسورة إلى تحول إشارة الدائرة القضبانية إلى اللون الأحمر.", options: ["True", "False"], correct: 1, hint: "A break in the rail interrupts the electrical path.", hintAr: "الكسر في القضيب يؤدي إلى قطع المسار الكهربائي." },
-            { id: 4, type: "TF", question: "Axle counters automatically clear after a miscount.", questionAr: "يتم تصفير عدادات المحاور تلقائيًا بعد حدوث خطأ في العد.", options: ["True", "False"], correct: 0, hint: "A miscount usually requires a manual reset for safety reasons.", hintAr: "يتطلب خطأ العد عادةً إعادة ضبط يدوية لأسباب تتعلق بالسلامة." },
-            { id: 5, type: "TF", question: "Wet ballast can cause false occupancy in track circuits.", questionAr: "يمكن أن تسبب فرشة الزلط (Ballast) المبللة إشغالًا كاذبًا في الدوائر القضبانية.", options: ["True", "False"], correct: 1, hint: "Moisture reduces the resistance between the rails.", hintAr: "الرطوبة تقلل المقاومة بين القضبان مما يسمح بمرور التيار." },
-            { id: 6, type: "TF", question: "Sensor gapping is a critical parameter in axle counters.", questionAr: "تعد المسافة بين المستشعر والعجلة (Sensor gapping) معلمًا حيويًا في عدادات المحاور.", options: ["True", "False"], correct: 1, hint: "The distance between the wheel and the sensor must be precise.", hintAr: "يجب أن تكون المسافة بين العجلة والمستشعر دقيقة لضمان العد الصحيح." },
-            { id: 7, type: "TF", question: "Track circuits are unaffected by rust on rails.", questionAr: "لا تتأثر الدوائر القضبانية بوجود الصدأ على القضبان.", options: ["True", "False"], correct: 0, hint: "Rust is an insulator and can prevent the wheels from shunting the circuit.", hintAr: "الصدأ يعتبر عازلًا ويمكن أن يمنع العجلات من توصيل (Shunt) الدائرة." },
-            { id: 8, type: "TF", question: "Preventive maintenance reduces unexpected failures.", questionAr: "الصيانة الوقائية تقلل من الأعطال غير المتوقعة.", options: ["True", "False"], correct: 1, hint: "Fixing things before they break is the goal of preventive care.", hintAr: "الهدف من الرعاية الوقائية هو إكمال الصيانة قبل تعطل المكونات." },
-            { id: 9, type: "TF", question: "EMI can affect axle counter performance.", questionAr: "يمكن أن يؤثر التداخل الكهرومغناطيسي (EMI) على أداء عداد المحاور.", options: ["True", "False"], correct: 1, hint: "Electromagnetic Interference can disrupt the sensors.", hintAr: "التداخل الكهرومغناطيسي قد يؤدي لتعطيل عمل المستشعرات." },
-            { id: 10, type: "TF", question: "Corrective maintenance is performed before a fault occurs.", questionAr: "تتم الصيانة التصحيحية قبل وقوع العطل.", options: ["True", "False"], correct: 0, hint: "Corrective happens AFTER a fault; preventive happens BEFORE.", hintAr: "الصيانة التصحيحية تحدث بَعْد العطل، أما الوقائية فتحدث قَبْله." },
-            { id: 11, type: "TF", question: "Train detection monitoring is essential for railway safety.", questionAr: "مراقبة نظام الكشف عن القطارات ضرورية لسلامة السكك الحديدية.", options: ["True", "False"], correct: 1, hint: "Knowing where the train is at all times is the foundation of safety.", hintAr: "معرفة مكان القطار في جميع الأوقات هو أساس السلامة." },
-            { id: 12, type: "TF", question: "In an unoccupied track circuit, the relay is energized.", questionAr: "في الدائرة القضبانية غير المشغولة، يكون المرحل (Relay) في حالة تشغيل (Energized).", options: ["True", "False"], correct: 1, hint: "When no train is present, current flows to the relay.", hintAr: "عند عدم وجود قطار، يتدفق التيار إلى المرحل." },
-            { id: 13, type: "TF", question: "Advanced analytics help predict track circuit failures early.", questionAr: "تساعد التحليلات المتقدمة في التنبؤ بأعطال الدوائر القضبانية مبكرًا.", options: ["True", "False"], correct: 1, hint: "Predictive data can spot degradation trends.", hintAr: "البيانات التنبؤية يمكنها رصد اتجاهات التدهور في الأداء." },
-            { id: 14, type: "TF", question: "Zentrak monitoring increases the frequency of routine inspections.", questionAr: "تؤدي مراقبة زينتراك (Zentrak) إلى زيادة عدد مرات التفتيش الروتيني.", options: ["True", "False"], correct: 0, hint: "Remote monitoring actually aims to optimize and reduce physical inspection needs.", hintAr: "تهدف المراقبة عن بعد فعليًا إلى تحسين وتقليل الحاجة للتفتيش الميداني." },
-            { id: 15, type: "TF", question: "Hall Effect sensors are used in AC track circuits.", questionAr: "تُستخدم مستشعرات تأثير هول (Hall Effect) في الدوائر القضبانية التي تعمل بالتيار المتردد (AC).", options: ["True", "False"], correct: 0, hint: "Hall Effect sensors are typically used in DC track circuits or axle counters.", hintAr: "تُستخدم مستشعرات تأثير هول عادةً في دوائر التيار المستمر أو عدادات المحاور." },
-            { id: 16, type: "TF", question: "DC traction current can interfere with AC track circuit measurements.", questionAr: "يمكن لتيار الجر المستمر (DC) أن يتداخل مع قياسات الدوائر القضبانية التي تعمل بالتيار المتردد (AC).", options: ["True", "False"], correct: 0, hint: "Modern AC monitoring processes calculate current while rejecting DC interference.", hintAr: "في الواقع، أنظمة المراقبة الحديثة مصممة لفلترة هذا التداخل." },
-            { id: 17, type: "TF", question: "Audio frequency track circuits use diagnostic outputs for monitoring.", questionAr: "تستخدم الدوائر القضبانية ذات التردد الصوتي (Audio Frequency) مخارج تشخيصية للمراقبة.", options: ["True", "False"], correct: 1, hint: "Microprocessor-controlled AF circuits provide diagnostic data for loggers.", hintAr: "توفر دوائر التردد الصوتي المتحكم بها معالج دقيق بيانات تشخيصية لأجهزة تسجيل البيانات." },
-            { id: 18, type: "TF", question: "One logger can communicate with multiple receivers.", questionAr: "يمكن لجهاز تسجيل بيانات (Logger) واحد التواصل مع عدة مستقبلات.", options: ["True", "False"], correct: 1, hint: "A single logger interface can manage serial links from multiple AF receivers.", hintAr: "يمكن لواجهة مسجل واحد إدارة روابط تسلسلية من عدة مستقبلات تردد صوتي." },
-            { id: 19, type: "TF", question: "Insulated rail joint contamination can affect track circuit performance.", questionAr: "تلوث فواصل القضبان المعزولة (Insulated Joints) يمكن أن يؤثر على أداء الدائرة القضبانية.", options: ["True", "False"], correct: 1, hint: "Contamination can lead to breakdown of the electrical isolation between sections.", hintAr: "التلوث يمكن أن يؤدي إلى انهيار العزل الكهربائي بين القطاعات." },
-            { id: 20, type: "TF", question: "Train detection systems do not require maintenance.", questionAr: "أنظمة الكشف عن القطارات لا تتطلب صيانة.", options: ["True", "False"], correct: 0, hint: "All safety-critical systems require scheduled routine and preventive maintenance.", hintAr: "تتطلب جميع الأنظمة الحيوية للسلامة صيانة روتينية ووقائية مجدولة." },
-            { id: 21, type: "TF", question: "Mechanical signaling systems use physical rods and wires to operate signals.", questionAr: "تستخدم أنظمة الإشارات الميكانيكية قضبانًا وأسلاكًا ملموسة لتشغيل الإشارات.", options: ["True", "False"], correct: 1, hint: "Operation depends on physical linkages between the lever frame and signal arm.", hintAr: "يعتمد التشغيل على الوصلات المادية بين إطار الرافعة وذراع الإشارة." },
-            { id: 22, type: "TF", question: "The home signal is the main stop signal in railway signaling.", questionAr: "إشارة الاستقبال (Home Signal) هي إشارة التوقف الرئيسية في نظام الإشارات.", options: ["True", "False"], correct: 1, hint: "It controls entry into the block section and acts as a primary stop command.", hintAr: "تتحكم في الدخول إلى قطاع البلوك وتعمل كأمر توقف رئيسي." },
-            { id: 23, type: "TF", question: "Distant signals require trains to stop when they show danger.", questionAr: "تتطلب إشارة التحذير (Distant Signals) توقف القطارات عندما تظهر حالة الخطر.", options: ["True", "False"], correct: 0, hint: "A distant signal warns of the status of the next signal; it is not a stop signal.", hintAr: "تحذر إشارة التحذير من حالة الإشارة التالية؛ وهي ليست إشارة توقف." },
-            { id: 24, type: "TF", question: "Junction signals are used when tracks divide into different routes.", questionAr: "تُستخدم إشارات التفريعة (Junction Signals) عندما تنقسم السكك إلى مسارات مختلفة.", options: ["True", "False"], correct: 1, hint: "These signals inform the driver about the specific route selected at a junction.", hintAr: "تخبر هذه الإشارات السائق بالمسار المحدد الذي تم اختياره عند التفريعة." },
-            { id: 25, type: "TF", question: "Disc signals are mainly used for high-speed train operations.", questionAr: "تُستخدم الإشارات القرصية بشكل أساسي في عمليات القطارات عالية السرعة.", options: ["True", "False"], correct: 0, hint: "Disc signals are intended for shunting movements in yards and sidings.", hintAr: "الإشارات القرصية مخصصة لحركات المناورة في الأحواش والسكك الجانبية." },
-            { id: 26, type: "TF", question: "Mechanical signaling systems depend heavily on electrical power.", questionAr: "تعتمد أنظمة الإشارات الميكانيكية بشكل كبير على الطاقة الكهربائية.", options: ["True", "False"], correct: 0, hint: "They use manual levers and physical force, making them independent of electricity.", hintAr: "تستخدم روافع يدوية وقوة بدنية، مما يجعلها مستقلة عن الكهرباء." },
-            { id: 27, type: "TF", question: "Mechanical signaling systems are suitable for lines with low train traffic.", questionAr: "تعد أنظمة الإشارات الميكانيكية مناسبة للخطوط ذات حركة القطارات المنخفضة.", options: ["True", "False"], correct: 1, hint: "Simple design makes them cost-effective for smaller, low-density lines.", hintAr: "التصميم البسيط يجعلها اقتصادية للخطوط الصغيرة ذات الكثافة المنخفضة." },
-            { id: 28, type: "TF", question: "One disadvantage of mechanical signaling is the high risk of human error.", questionAr: "من عيوب الإشارات الميكانيكية الارتفاع الكبير لخطر الخطأ البشري.", options: ["True", "False"], correct: 1, hint: "Manual operation and control by operators increase the chance of mistakes.", hintAr: "التشغيل والتحكم اليدوي من قبل المشغلين يزيد من فرصة وقوع الأخطاء." },
-            { id: 29, type: "TF", question: "Mechanical signaling systems are easy to integrate with modern digital control systems.", questionAr: "من السهل دمج أنظمة الإشارات الميكانيكية مع أنظمة التحكم الرقمية الحديثة.", options: ["True", "False"], correct: 0, hint: "The physical nature of linkages makes digital integration highly difficult.", hintAr: "الطبيعة المادية للوصلات تجعل التكامل الرقمي صعباً للغاية." },
-            { id: 30, type: "TF", question: "Environmental conditions can affect the reliability of mechanical signaling systems.", questionAr: "يمكن للظروف البيئية أن تؤثر على موثوقية أنظمة الإشارات الميكانيكية.", options: ["True", "False"], correct: 1, hint: "Weather factors like heat can impact mechanical linkages and wires.", hintAr: "عوامل الطقس مثل الحرارة يمكن أن تؤثر على الوصلات الميكانيكية والأسلاك." },
-            { id: 31, type: "MCQ", question: "Track circuits detect train presence by:", questionAr: "تقوم الدوائر القضبانية بالكشف عن وجود القطار من خلال:", options: ["Optical sensors", "Hydraulic pressure", "Electrical continuity through rails", "GPS positioning"], correct: 2, hint: "Detection relies on the shunting of the electrical circuit through the wheels.", hintAr: "يعتمد الكشف على قصر الدائرة الكهربائية (Shunting) عبر العجلات." },
-            { id: 32, type: "MCQ", question: "The main purpose of impedance bonds is to:", questionAr: "الغرض الرئيسي من روابط المعاوقة (Impedance Bonds) هو:", options: ["Increase ballast resistance", "Detect wheel flanges", "Isolate traction current from signaling current", "Count train axles"], correct: 2, hint: "They allow the return of traction current while keeping signal energy isolated.", hintAr: "تسمح بعودة تيار الجر مع الحفاظ على عزل طاقة الإشارات." },
-            { id: 33, type: "MCQ", question: "In a track circuit, when a train enters the section, the relay becomes:", questionAr: "في الدائرة القضبانية، عندما يدخل القطار القطاع، يصبح المرحل (Relay):", options: ["Overloaded", "Energized", "Picked up", "De-energized"], correct: 3, hint: "Current is diverted through the train's axles, dropping the relay.", hintAr: "يتم تحويل التيار عبر محاور القطار، مما يؤدي إلى سقوط (فصل) المرحل." },
-            { id: 34, type: "MCQ", question: "Axle counters determine occupancy when:", questionAr: "تحدد عدادات المحاور إشغال السكة عندما:", options: ["Voltage drops below a limit", "Axles are detected magnetically", "Rails are electrically shunted", "Signals are manually set"], correct: 1, hint: "Wheels are counted digitally using magnetic sensors on the track.", hintAr: "يتم عد العجلات رقمياً باستخدام مستشعرات مغناطيسية على السكة." },
-            { id: 35, type: "MCQ", question: "A mismatch between in-count and out-count results in:", questionAr: "يؤدي عدم التطابق بين عدد المحاور الداخلة والخارجة إلى:", options: ["Clear track", "Green signal", "Occupied section", "Automatic reset"], correct: 2, hint: "Unequal counts trigger an occupied status for safety until reset.", hintAr: "تؤدي الأعداد غير المتساوية إلى تفعيل حالة الإشغال للأمان حتى إعادة الضبط." },
-            { id: 36, type: "MCQ", question: "Which condition causes false occupancy in track circuits?", questionAr: "أي من هذه الحالات تسبب إشغالًا كاذبًا في الدوائر القضبانية؟", options: ["High shunt resistance", "Wet ballast", "Sensor misalignment", "Power surge"], correct: 1, hint: "Excessive moisture in ballast leaks current, simulating a train shunt.", hintAr: "الرطوبة الزائدة في الزلط تسرب التيار، مما يحاكي وجود قطار." },
-            { id: 37, type: "MCQ", question: "Axle counters are especially suitable for:", questionAr: "تعد عدادات المحاور مناسبة بشكل خاص لـ:", options: ["Short insulated sections only", "Dry ballast areas", "Tunnels and long track sections", "Manual signal systems"], correct: 2, hint: "They are robust against environmental issues like moisture in long sections.", hintAr: "تتميز بالمتانة ضد المشاكل البيئية مثل الرطوبة في القطاعات الطويلة." },
-            { id: 38, type: "MCQ", question: "Sensor misalignment in axle counters leads to:", questionAr: "يؤدي عدم محاذاة المستشعر في عدادات المحاور إلى:", options: ["Increased accuracy", "False clear", "Missed counts", "Reduced EMI"], correct: 2, hint: "Incorrect gapping prevents the magnetic sensor from detecting passing axles.", hintAr: "المسافة غير الصحيحة تمنع المستشعر المغناطيسي من اكتشاف المحاور المارة." },
-            { id: 39, type: "MCQ", question: "In both detection systems, a fault results in:", questionAr: "في كلا نظامي الكشف، يؤدي العطل إلى:", options: ["Green signal", "Yellow signal", "Signal off", "Red signal"], correct: 3, hint: "Both systems default to the most restrictive state (Red) upon failure.", hintAr: "يعود كلا النظامين إلى الحالة الأكثر تقييداً (الأحمر) عند حدوث عطل." },
-            { id: 40, type: "MCQ", question: "Which maintenance action includes software updates?", questionAr: "أي إجراء صيانة يتضمن تحديثات البرامج؟", options: ["Routine maintenance", "Corrective maintenance", "Preventive maintenance", "Emergency operation"], correct: 2, hint: "Updating and calibrating systems before failure is a preventive task.", hintAr: "تحديث ومعايرة الأنظمة قبل حدوث العطل هو مهمة وقائية." },
-            { id: 41, type: "MCQ", question: "What is the primary purpose of train detection systems?", questionAr: "ما هو الغرض الأساسي من أنظمة الكشف عن القطارات؟", options: ["Improve passenger comfort", "Detect track occupancy", "Reduce fuel consumption", "Control ticketing systems"], correct: 1, hint: "The system identifies if a track section is clear or occupied.", hintAr: "يقوم النظام بتحديد ما إذا كان قطاع السكة خاليًا أم مشغولاً." },
-            { id: 42, type: "MCQ", question: "A track circuit is considered occupied when:", questionAr: "تعتبر الدائرة القضبانية مشغولة عندما:", options: ["The relay is energized", "Current flows freely through the rails", "Train wheels short-circuit the rails", "The signal lamp turns green"], correct: 2, hint: "The physical presence of wheels creates an electrical short between rails.", hintAr: "الوجود المادي للعجلات يخلق قصرًا كهربائيًا بين القضبان." },
-            { id: 43, type: "MCQ", question: "Which issue can be detected using advanced analytics?", questionAr: "أي مشكلة يمكن اكتشافها باستخدام التحليلات المتقدمة؟", options: ["Wheel wear", "Rail joint contamination", "Passenger overload", "Track alignment"], correct: 1, hint: "Analytics can identify degradation in insulated rail joints early.", hintAr: "يمكن للتحليلات تحديد تدهور فواصل القضبان المعزولة مبكرًا." },
-            { id: 44, type: "MCQ", question: "One benefit of Zentrak monitoring is:", questionAr: "إحدى فوائد مراقبة زينتراك (Zentrak) هي:", options: ["Increased manual inspection", "Reduced life-cycle cost", "Higher energy consumption", "Manual fault reporting"], correct: 1, hint: "Continuous monitoring leads to more efficient maintenance and lower costs.", hintAr: "تؤدي المراقبة المستمرة إلى صيانة أكثر كفاءة وتكاليف أقل." },
-            { id: 45, type: "MCQ", question: "AC track circuits commonly use which relay type?", questionAr: "ما نوع المرحل (Relay) الشائع في الدوائر القضبانية التي تعمل بالتيار المتردد (AC)؟", options: ["Thermal relay", "Solid-state relay", "Phase-sensitive vane relay", "Hydraulic relay"], correct: 2, hint: "Phase-sensitive vane relays are standard for monitoring AC track circuits.", hintAr: "مرحلات الفان (vane) الحساسة للطور هي المعيار لمراقبة دوائر التيار المتردد." },
-            { id: 46, type: "MCQ", question: "Which sensor is used to monitor DC track circuits?", questionAr: "أي مستشعر يُستخدم لمراقبة الدوائر القضبانية التي تعمل بالتيار المستمر (DC)؟", options: ["Optical sensor", "Temperature sensor", "Hall Effect sensor", "Pressure sensor"], correct: 2, hint: "Hall Effect sensors non-invasively measure the DC receiver current.", hintAr: "تقوم مستشعرات تأثير هول بقياس تيار مستقبل التيار المستمر بشكل غير تداخلي." },
-            { id: 47, type: "MCQ", question: "Audio frequency track circuits are mainly associated with:", questionAr: "ترتبط الدوائر القضبانية ذات التردد الصوتي بشكل أساسي بـ:", options: ["Mechanical signaling", "Manual block systems", "Microprocessor-controlled equipment", "Pneumatic systems"], correct: 2, hint: "Modern AF circuits utilize digital, microprocessor-based diagnostic outputs.", hintAr: "تستخدم دوائر التردد الصوتي الحديثة مخارج تشخيص رقمية تعتمد على المعالجات الدقيقة." },
-            { id: 48, type: "MCQ", question: "Which parameter is recorded in audio frequency monitoring?", questionAr: "أي معامل (Parameter) يتم تسجيله في مراقبة التردد الصوتي؟", options: ["Train speed", "Sideband current", "Axle load", "Rail temperature"], correct: 1, hint: "Sideband current is a key parameter logged for AF track circuit health.", hintAr: "تيار النطاق الجانبي (Sideband) هو معلم رئيسي يتم تسجيله لسلامة دوائر التردد الصوتي." },
-            { id: 49, type: "MCQ", question: "Zentrak TDM can provide monitoring:", questionAr: "يمكن لنظام Zentrak TDM توفير المراقبة:", options: ["Only during daytime", "Only during maintenance", "24 hours a day", "Only when faults occur"], correct: 2, hint: "Real-time TDM systems offer continuous monitoring around the clock.", hintAr: "توفر أنظمة TDM في الوقت الفعلي مراقبة مستمرة على مدار الساعة." },
-            { id: 50, type: "MCQ", question: "Track circuit monitoring data is mainly processed by:", questionAr: "يتم معالجة بيانات مراقبة الدوائر القضبانية بشكل أساسي بواسطة:", options: ["Signal lamps", "Mechanical relays", "Loggers and analytics software", "Train drivers"], correct: 2, hint: "Data is gathered by loggers and processed via specialized analytics software.", hintAr: "يتم جمع البيانات بواسطة أجهزة التسجيل ومعالجتها عبر برامج تحليلات متخصصة." },
-            { id: 51, type: "MCQ", question: "Mechanical rail signaling mainly operates using:", questionAr: "تعمل إشارات السكك الحديدية الميكانيكية بشكل أساسي باستخدام:", options: ["Electronic circuits", "Hydraulic systems", "Physical levers and rods", "Wireless signals"], correct: 2, hint: "It uses physical mechanical components like levers, rods, and wires.", hintAr: "تستخدم مكونات ميكانيكية مادية مثل الروافع والقضبان والأسلاك." },
-            { id: 52, type: "MCQ", question: "Which signal is considered the primary stop signal?", questionAr: "أي إشارة تعتبر إشارة التوقف الرئيسية؟", options: ["Distant Signal", "Home Signal", "Disc Signal", "Junction Signal"], correct: 1, hint: "The Home signal is the main stop command protecting a block section.", hintAr: "إشارة الاستقبال (Home Signal) هي أمر التوقف الرئيسي الذي يحمي قطاع البلوك." },
-            { id: 53, type: "MCQ", question: "Which signal warns the driver about the status of the next signal?", questionAr: "أي إشارة تحذر السائق من حالة الإشارة التالية؟", options: ["Home Signal", "Junction Signal", "Distant Signal", "Calling-on Signal"], correct: 2, hint: "The Distant signal alerts the driver of the upcoming Home signal's position.", hintAr: "تنبه إشارة التحذير السائق بموقع إشارة الاستقبال القادمة." },
-            { id: 54, type: "MCQ", question: "Junction signals are used when:", questionAr: "تُستخدم إشارات التفريعة (Junction Signals) عندما:", options: ["Trains enter stations", "Tracks split into different directions", "Trains leave yards", "Trains change speed"], correct: 1, hint: "These signals are placed where tracks divide to indicate the route status.", hintAr: "توضع هذه الإشارات حيث تنقسم السكك لتوضيح حالة المسار." },
-            { id: 55, type: "MCQ", question: "Permissive signals allow a train to:", questionAr: "تسمح الإشارات السماحية (Permissive Signals) للقطار بـ:", options: ["Stop immediately", "Enter an occupied track slowly", "Increase speed", "Reverse direction"], correct: 1, hint: "Also known as calling-on signals, they allow slow entry into occupied sections.", hintAr: "تُعرف أيضاً بإشارات النداء، وتسمح بالدخول البطيء إلى القطاعات المشغولة." },
-            { id: 56, type: "MCQ", question: "Disc shunting signals are mainly used for:", questionAr: "تُستخدم إشارات المناورة القرصية (Disc Shunting) بشكل أساسي لـ:", options: ["High-speed operations", "Passenger stations", "Shunting movements in yards", "Long-distance travel"], correct: 2, hint: "These signals control slow movements within sidings and yards.", hintAr: "تتحكم هذه الإشارات في التحركات البطيئة داخل السكك الجانبية والأحواش." },
-            { id: 57, type: "MCQ", question: "Which component is used to manually operate mechanical signals?", questionAr: "أي مكون يُستخدم لتشغيل الإشارات الميكانيكية يدوياً؟", options: ["Transformer", "Lever", "Battery", "Relay"], correct: 1, hint: "Signal operators pull levers to move signal arms via mechanical links.", hintAr: "يقوم مشغلو الإشارات بسحب الروافع لتحريك أذرع الإشارة عبر وصلات ميكانيكية." },
-            { id: 58, type: "MCQ", question: "One advantage of mechanical signaling systems is:", questionAr: "إحدى مزايا أنظمة الإشارات الميكانيكية هي:", options: ["High automation", "Low installation cost", "Wireless communication", "Computer control"], correct: 1, hint: "Simplified manual designs result in lower initial installation expenses.", hintAr: "تؤدي التصاميم اليدوية المبسطة إلى خفض نفقات التركيب الأولية." },
-            { id: 59, type: "MCQ", question: "Mechanical signaling systems are most suitable for:", questionAr: "تعد أنظمة الإشارات الميكانيكية أكثر ملاءمة لـ:", options: ["High-speed railways", "Busy urban railways", "Low traffic railway lines", "Metro systems"], correct: 2, hint: "Due to their manual nature, they are best for lines with low train frequency.", hintAr: "نظراً لطبيعتها اليدوية، فهي الأفضل للخطوط ذات تردد القطارات المنخفض." },
-            { id: 60, type: "MCQ", question: "A major limitation of mechanical signaling systems is:", questionAr: "من القيود الرئيسية لأنظمة الإشارات الميكانيكية:", options: ["Too much automation", "Dependence on electricity", "Limited operational range", "Digital complexity"], correct: 2, hint: "Physical linkages limit the distance signals can be operated from the signal box.", hintAr: "تحد الوصلات المادية من المسافة التي يمكن تشغيل الإشارات منها من برج الإشارة." }
-        ];
-
-        const beboMessages = {
-            intro: ["مرحبا اسمي بيبو جاهز لبدء الاختبار؟"],
-            correct: [
-                "عاش يا وحش! أداء أسطوري.", "الله ينور عليك، تركيزك في السما!", "ممتاز! كمل يا بطل بنفس الحماس.",
-                "وحش! إجابة فنية مية مية.", "رائع، أنت فاهم اللعبة كويس جداً.", "برافو! إجابة أسطورية زي ما توقعت.",
-                "عاش يا دحيح، مجهودك جبار.", "تسلم إيدك، إجابة مظبوطة بالملي.", "أحسنت! فخور بيك فعلاً يا وحش."
-            ],
-            wrong: [
-                "غلط تماماً! ركز بقى عشان كدة كتير أوي!",
-                "إيه العك ده؟ فوق كدة واقرأ السؤال كويس يا هندسة!",
-                "إجابة كارثية! راجع معلوماتك فوراً كدة مينفعش!",
-                "غلط! أنت بتهزر ولا إيه؟ ركز بقى شوية!"
-            ],
-             resultsAdvice: [
-                "نتيجتك دى يسطا ولا درجة حرارة.",
-                "منتا لو تبص على التلميحات وأنت بتحل مكنتش جبت درجات الحرارة دى.",
-                "تعال اشرب شاي يسطا باللي أنت عامله ده.",
-                "متزعلش مش مهم درجتك في الامتحان المهم الصحة والستر.",
-                "هيجي شخص يحسسك إنك في كفة والكون كله في كفة وبعدين يسقفلك بالكفتين على وشك علشان النتيجة اللي أنت جايبها دى."
-            ],
-            resultsSuccess: [
-                "ما شاء الله عليك يا بطل!",
-                "هايل بجد عاش عليك، استمر.",
-                "شيء جميل جداً عندك أحسن من كده كمان عاش عليك."
-            ]
-        };
-
-        // State variables
-        let index = 0;
-        let userAnswers = new Array(quizData.length).fill(null);
-
-        function setBebo(state, category, specificIdx = -1) {
-            const robot = document.getElementById('bebo-robot');
-            const bubble = document.getElementById('bebo-bubble');
-            let msgs = beboMessages[category];
-            
-            robot.className = `bebo-robot ${state}`;
-            let chosenMsg = (category === 'correct' && specificIdx !== -1) ? (msgs[specificIdx % msgs.length]) : msgs[Math.floor(Math.random() * msgs.length)];
-            
-            bubble.innerText = chosenMsg;
-            bubble.classList.add('active');
-            
-            setTimeout(() => { 
-                bubble.classList.remove('active');
-                if(index < quizData.length && !userAnswers[index]) robot.classList.remove('success', 'error');
-            }, 3500);
-        }
-
-        function toggleHint() { 
-            document.getElementById('hint-panel').classList.toggle('active'); 
-        }
-
-        function init() {
-            document.getElementById('total-idx').innerText = quizData.length.toString().padStart(2, '0');
-            render();
-            setTimeout(() => setBebo('ready', 'intro'), 500);
-        }
-
-        function render() {
-            const data = quizData[index];
-            document.getElementById('current-idx').innerText = (index + 1).toString().padStart(2, '0');
-            
-            document.getElementById('question-text').innerHTML = `
-                <div class="q-en-main">${data.question}</div>
-                <div class="q-ar-box">${data.questionAr}</div>
-            `;
-            
-            document.getElementById('hint-text').innerHTML = `
-                <div style="margin-bottom: 8px; font-weight: 700; font-size: 0.75rem; color: #f59e0b; text-transform: uppercase; letter-spacing: 1px;">Guidance / توجيه</div>
-                <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; font-family: 'Tajawal', sans-serif; text-align: right; direction: rtl; color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
-                    <p style="margin-bottom: 6px; text-align: left; direction: ltr;">${data.hint}</p>
-                    <p style="color: rgba(148, 163, 184, 0.7);">${data.hintAr}</p>
-                </div>
-            `;
-
-            document.getElementById('hint-panel').classList.remove('active');
-
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-            const answered = userAnswers[index] !== null;
-            
-            document.getElementById('next-btn').disabled = !answered;
-            document.getElementById('next-text').innerText = (index === quizData.length - 1) ? "FINALIZE" : "NEXT";
-            document.getElementById('btn-prev').disabled = index === 0;
-            
-            const btnSkip = document.getElementById('btn-skip');
-            if (answered) {
-                btnSkip.classList.add('hidden');
-            } else {
-                btnSkip.classList.remove('hidden');
-            }
-
-            if (data.type === "MCQ") {
-                container.className = "options-grid grid-cols-1 md:grid-cols-2 gap-3";
-                data.options.forEach((opt, i) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'option-btn';
-                    btn.innerHTML = `<span class="char-idx">${String.fromCharCode(65 + i)}</span> <span>${opt}</span>`;
-                    if (answered) {
-                        btn.disabled = true;
-                        if (i === data.correct) btn.classList.add('correct');
-                        if (userAnswers[index] === i && i !== data.correct) btn.classList.add('wrong');
-                    } else { btn.onclick = () => select(i); }
-                    container.appendChild(btn);
-                });
-            } else {
-                container.className = "options-grid grid-cols-2 gap-4";
-                [1, 0].forEach(val => {
-                    const btn = document.createElement('button');
-                    btn.className = 'option-btn justify-center';
-                    btn.innerText = val === 1 ? "TRUE" : "FALSE";
-                    if (answered) {
-                        btn.disabled = true;
-                        if (val === data.correct) btn.classList.add('correct');
-                        if (userAnswers[index] === val && val !== data.correct) btn.classList.add('wrong');
-                    } else { btn.onclick = () => select(val); }
-                    container.appendChild(btn);
-                });
-            }
-
-            const prog = ((index + 1) / quizData.length * 100);
-            document.getElementById('progress-bar').style.width = prog + '%';
-            document.getElementById('percentage-text').innerText = Math.round(prog) + '% COMPLETE';
-            
-            lucide.createIcons();
-        }
-
-        function select(choice) {
-            if (userAnswers[index] !== null) return;
-            userAnswers[index] = choice;
-            const isCorrect = choice === quizData[index].correct;
-            setBebo(isCorrect ? 'success' : 'error', isCorrect ? 'correct' : 'wrong', index);
-            render();
-        }
-
-        function handleBack() { 
-            if (index > 0) { 
-                index -= 1; 
-                render(); 
-            } 
-        }
-
-        function handleNext() { 
-            if (index === quizData.length - 1) { 
-                finish(); 
-            } else { 
-                index += 1; 
-                render(); 
-            } 
-        }
-
-        function handleSkip() { 
-            if (index === quizData.length - 1) { 
-                finish(); 
-            } else { 
-                index += 1; 
-                render(); 
-            } 
-        }
-
-        function finish() {
-            document.getElementById('quiz-ui').classList.add('hidden');
-            document.getElementById('result-view').classList.remove('hidden');
-            document.getElementById('bebo-wrapper').classList.add('hidden');
-            
-            const score = userAnswers.filter((a, i) => a === quizData[i].correct).length;
-            const pct = Math.round(score / quizData.length * 100);
-            
-            document.getElementById('final-raw-score').innerText = `${score}/${quizData.length}`;
-            document.getElementById('final-pct').innerText = pct + '%';
-            
-            const fb = document.getElementById('final-feedback');
-            const category = pct >= 80 ? 'resultsSuccess' : 'resultsAdvice';
-            const randomMsg = beboMessages[category][Math.floor(Math.random() * beboMessages[category].length)];
-            fb.innerText = randomMsg;
-
-            const title = document.getElementById('final-bebo-title');
-            title.innerText = pct >= 80 ? "مستوى مشرف جداً يا بطل!" : "محتاج مراجعة وتركيز أكتر..";
-            
-            const accent = document.getElementById('result-accent');
-            accent.className = `absolute top-0 left-0 w-full h-[3px] ${pct >= 80 ? 'bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)]' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'}`;
-
-            lucide.createIcons();
-        }
-
-        window.onload = init;
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
