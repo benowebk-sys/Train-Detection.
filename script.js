@@ -4728,7 +4728,49 @@ function finish() {
     const title = document.getElementById('final-bebo-title');
     title.innerText = pct >= 80 ? "مستوى مشرف جداً يا بطل!" : "محتاج مراجعة وتركيز أكتر..";
 
+    // play result audio if present; fallback to tone on error
+    const resultAudio = document.getElementById('result-audio');
+    if (resultAudio) {
+      try {
+        resultAudio.currentTime = 0;
+        const playPromise = resultAudio.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch((err) => { console.warn('result audio play failed:', err); playFallbackTone(); });
+        }
+      } catch (e) {
+        console.warn('result audio play threw:', e);
+        playFallbackTone();
+      }
+    } else {
+      playFallbackTone();
+    }
+
     lucide.createIcons();
 }
 
 window.onload = init;
+
+function playFallbackTone(duration = 0.25, freq = 880, volume = 0.06) {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.value = volume;
+    o.connect(g);
+    g.connect(ctx.destination);
+    const now = ctx.currentTime;
+    o.start(now);
+    g.gain.setValueAtTime(volume, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    o.stop(now + duration + 0.02);
+    setTimeout(() => {
+      try { ctx.close(); } catch (e) {}
+    }, (duration + 0.05) * 1000);
+  } catch (e) {
+    console.warn('playFallbackTone failed', e);
+  }
+}
